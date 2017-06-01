@@ -6,15 +6,15 @@ Yet another js animation engine
 ```
 cd example/simple
 
-npm install &amp;&amp; npm run dev
+npm install && npm run dev
 
 ```
 
-or with yarn:
+or, with yarn:
 ```
 cd example/simple
 
-yarn &amp;&amp; yarn dev
+yarn && yarn dev
 
 ```
 and [open the example](http://localhost:3000)
