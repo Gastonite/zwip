@@ -41,7 +41,6 @@ export const isElement = internals.Checker(object => {
 
 export const round = (value, decimals) => {
 
-  isRequired(value, 'value');
   isNumber(value, 'value');
 
   isRequired(decimals, 'decimals');
