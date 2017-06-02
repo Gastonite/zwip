@@ -117,6 +117,8 @@ export default internals.Animation = (options = {}) => {
       if (!_startedAt)
         return;
 
+      _frameCounter++;
+
       if (nbFrames && (_frameCounter >= nbFrames))
         return animation.stop();
 
@@ -126,7 +128,6 @@ export default internals.Animation = (options = {}) => {
 
         nbFrames = Math.floor((_frameCounter * duration) / playedTime);
 
-        _frameCounter++;
       }
 
       _update();
