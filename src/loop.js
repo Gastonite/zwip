@@ -1,6 +1,6 @@
-import Emitter from './emitter';
+import Emitter from 'klak';
 
-import { isRequired, isFunction, isString, isObject, isInteger, noop } from './utils';
+import { assert, isRequired, isFunction, isString, isObject, isInteger, noop } from './utils';
 
 const internals = {
   animations: [],
@@ -27,7 +27,7 @@ internals.loop = () => {
 
   if (internals.delta > internals.interval) {
 
-    internals.Loop.frame();
+    internals.AnimationLoop.frame();
   }
 };
 
@@ -36,20 +36,22 @@ internals.MethodCaller = (key, ...args) => {
   isRequired(key, 'key');
   isString(key, 'key');
 
-  return object => {
+  return animation => {
 
-    if (object[key])
-      object[key](...args);
+    if (animation[key] && (internals.counter % animation.frequency === 0))
+      animation[key](...args);
 
   }
 };
+
+internals.emitTick = internals.MethodCaller('emit', 'tick');
 internals.callUpdate = internals.MethodCaller('update');
 internals.callRender = internals.MethodCaller('render');
 internals.callPause = internals.MethodCaller('pause');
 
 internals.isNotPaused = object => !object.pausedAt;
 
-internals.Loop = {
+internals.AnimationLoop = {
   start() {
 
     if (internals.requestId)
@@ -100,13 +102,18 @@ internals.Loop = {
 
     isObject(animation, 'animation');
 
+    animation.frequency = animation.frequency || 1;
+
+    isInteger(animation.frequency, 'frequency');
+
+    assert(isFunction(animation.render) || isFunction(animation.update), `'render' or 'update' method is required`);
+
+
+    animation.render = animation.render || noop;
     animation.update = animation.update || noop;
 
-    isFunction(animation.update, 'update');
-    isFunction(animation.render, 'render');
-
     if (auto && !internals.requestId)
-      internals.Loop.start();
+      internals.AnimationLoop.start();
 
     if (internals.animations.includes(animation))
       return;
@@ -122,7 +129,7 @@ internals.Loop = {
       internals.animations.splice(index, 1);
 
     if (auto && internals.requestId && !internals.animations.length)
-      internals.Loop.stop();
+      internals.AnimationLoop.stop();
 
   },
 
@@ -138,6 +145,8 @@ internals.Loop = {
     internals.state.frames = internals.counter;
 
     const animations = internals.animations.filter(internals.isNotPaused);
+
+    animations.forEach(internals.emitTick);
 
     animations.forEach(internals.callUpdate);
 
@@ -159,6 +168,6 @@ internals.Loop = {
 };
 
 export default Object.assign(
-  internals.Loop,
+  internals.AnimationLoop,
   Emitter(['start', 'stop', 'pause', 'unpause'])
 );

@@ -2,7 +2,7 @@
 
 const internals = {};
 
-internals.Checker = (check, errorMessage) => {
+internals.Assertion = (check, errorMessage) => {
 
   return (input, assert) => {
 
@@ -17,18 +17,30 @@ internals.Checker = (check, errorMessage) => {
   };
 };
 
+
+export const assert = (condition, message) => {
+
+  if (condition)
+    return condition;
+
+  throw new Error(message);
+};
+
 export const noop = () => {};
-export const isRequired = internals.Checker(input => !!input, 'is required');
-export const isInstanceOf = type => internals.Checker(input => input instanceof type, `is not an instance of ${type.name}`);
+export const isEqualTo = (value, message = 'is not equal to value') => internals.Assertion(input => input === value, message);
+export const isTrue = isEqualTo(true, 'must be true');
+export const isUndefined = isEqualTo(void 0, 'must be undefined');
+export const isRequired = internals.Assertion(input => !!input, 'is required');
+export const isInstanceOf = type => internals.Assertion(input => input instanceof type, `is not an instance of ${type.name}`);
 export const isArray = isInstanceOf(Array);
-export const isObject = internals.Checker(input => typeof input === 'object', 'must be an object');
-export const isString = internals.Checker(input => typeof input === 'string', 'must be a string');
-export const isFunction = internals.Checker(input => typeof input === 'function', 'must be a function');
-export const isNumber = internals.Checker(input => typeof input === 'number', 'must be a number');
-export const isInteger = internals.Checker(input => Number.isInteger(input), 'must be an integer');
+export const isObject = internals.Assertion(input => typeof input === 'object', 'must be an object');
+export const isString = internals.Assertion(input => typeof input === 'string', 'must be a string');
+export const isFunction = internals.Assertion(input => typeof input === 'function', 'must be a function');
+export const isNumber = internals.Assertion(input => typeof input === 'number', 'must be a number');
+export const isInteger = internals.Assertion(input => Number.isInteger(input), 'must be an integer');
 
 
-export const isElement = internals.Checker(object => {
+export const isElement = internals.Assertion(object => {
 
   if (!object || typeof object !== "object")
     return false;

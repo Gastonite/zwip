@@ -1,26 +1,16 @@
 'use strict';
 
-const Path = require('path');
 const HTMLWebpackPlugin = require('html-webpack-plugin');
 const Webpack = require('webpack');
 
-module.exports = (env) => {
+module.exports = (options) => {
 
-  const isBuild = false;
-
-  const entry = Path.resolve('./src/index.js');
-
-  const output = {
-    path: Path.resolve('./build'),
-    filename: '[name].js'
-  };
-
-  const htmlTemplatePath = Path.resolve('src/index.html');
+  const { isBuild, entry, output, template = false, port = 3000 } = options;
 
   const devtool = !isBuild && 'source-map';
 
   const devServer = {
-    port: 3000,
+    port,
     historyApiFallback: true,
     inline: !isBuild,
     hot: !isBuild,
@@ -51,7 +41,7 @@ module.exports = (env) => {
 
   plugins.push(new HTMLWebpackPlugin({
     filename: `index.html`,
-    template: htmlTemplatePath,
+    template,
     cache: true,
     inject: 'body',
     minify: isBuild && {

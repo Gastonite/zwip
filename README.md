@@ -1,20 +1,22 @@
-# zwip
-Yet another js animation engine
+# Zwip
 
-## Run the example
+Utility for creating JS animations with factory functions :)
+
+### Show example
+
+show the already builded example:
+
+```examples/slide/build/index.html```
+
+
+### Build using webpack-dev-server
 
 ```
-cd example/simple
-
-npm install && npm run dev
-
+npm install && npm run demo
 ```
 
 or, with yarn:
 ```
-cd example/simple
-
-yarn && yarn dev
-
+yarn && yarn demo
 ```
-and [open the example](http://localhost:3000)
+Now the demo is visible at [http://localhost:3000](http://localhost:3000)

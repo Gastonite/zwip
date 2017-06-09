@@ -1,11 +1,11 @@
 import Loop from './loop';
-import Emitter from './emitter';
-import { isInteger, isString, isObject, isFunction, noop } from './utils';
+import Emitter from 'klak';
+import { isInteger, isString, isObject, isFunction, isUndefined, noop } from './utils';
 import { easings } from './easings';
 
-const internals = {};
+const internal = {};
 
-internals.parseEasing = (easing = easings.linear) => {
+internal.parseEasing = (easing = easings.linear) => {
 
   if (easing) {
 
@@ -23,17 +23,18 @@ internals.parseEasing = (easing = easings.linear) => {
   return easing;
 };
 
-internals.parseOptions = input => {
+internal.parseOptions = input => {
   const options = {};
 
   isObject(input, 'options');
+  isUndefined(input.isZwipAnimation, 'isZwipAnimation');
 
   const { start, stop, update, render, reverse, duration, nbFrames, easing } = input;
 
   options.start = !start ? noop : isFunction(start, 'start');
   options.stop = !stop ? noop : isFunction(stop, 'stop');
   options.update = !update ? noop : isFunction(update, 'update');
-  options.render = isFunction(render, 'render');
+  options.render = !render ? noop : isFunction(render, 'render');
   options.reverse = !!reverse;
 
   if (!(duration ^ nbFrames))
@@ -42,12 +43,12 @@ internals.parseOptions = input => {
   options.duration = duration && isInteger(duration, 'duration');
   options.nbFrames = nbFrames && isInteger(nbFrames, 'nbFrames');
 
-  options.easing = internals.parseEasing(easing);
+  options.easing = internal.parseEasing(easing);
 
   return options;
 };
 
-export default internals.Animation = (options = {}) => {
+export default internal.Animation = (options = {}) => {
 
   const {
     start:_start,
@@ -56,7 +57,7 @@ export default internals.Animation = (options = {}) => {
     easing:_easing,
     render: _render,
     duration,
-  } = options = internals.parseOptions(options);
+  } = options = internal.parseOptions(options);
 
   let { nbFrames, reverse } = options;
 
@@ -66,15 +67,16 @@ export default internals.Animation = (options = {}) => {
   let _frameCounter;
 
   const animation = {
+    isZwipAnimation: true,
     start(options = {}) {
 
       if (_startedAt)
         throw new Error(`Animation is already started`);
 
-      console.error('Animation.start()', options);
       isObject(options, 'options');
 
-      reverse = !!options.reverse;
+      if ('reverse' in options)
+        reverse = !!options.reverse;
 
       _pausedAt = null;
       _startedAt = Date.now();
@@ -84,10 +86,10 @@ export default internals.Animation = (options = {}) => {
       _start(options);
 
       Loop.register(animation);
-      this.emit('start');
+
+      animation.emit('start');
     },
     stop() {
-      console.error('Animation.stop()');
 
       _pausedAt = null;
       _startedAt = null;
@@ -97,19 +99,19 @@ export default internals.Animation = (options = {}) => {
 
       Loop.deregister(animation);
 
-      this.emit('stop');
+      animation.emit('stop');
     },
     pause() {
 
     if (!_pausedAt) {
       _pausedAt = Date.now();
-      this.emit('unpause');
+      animation.emit('unpause');
       return;
     }
 
     _pausedTime = _pausedTime + (Date.now() - _pausedAt);
     _pausedAt = null;
-      this.emit('pause');
+      animation.emit('pause');
 
     },
     update() {
@@ -117,17 +119,17 @@ export default internals.Animation = (options = {}) => {
       if (!_startedAt)
         return;
 
-      _frameCounter++;
 
       if (nbFrames && (_frameCounter >= nbFrames))
         return animation.stop();
+
+      _frameCounter++;
 
       if (duration) {
 
         const playedTime = animation.played;
 
         nbFrames = Math.floor((_frameCounter * duration) / playedTime);
-
       }
 
       _update();
@@ -184,8 +186,17 @@ export default internals.Animation = (options = {}) => {
         return;
 
       return nbFrames / (Loop.fps)
+    },
+    get state() {
+      return {
+        value: animation.value,
+        nbFrames: animation.nbFrames,
+        duration: animation.duration,
+        played: animation.played,
+        currentFrame: animation.currentFrame
+      };
     }
   };
 
-  return Object.assign(animation, Emitter(['start', 'stop']));
+  return Object.assign(animation, Emitter(['start', 'stop', 'pause', 'unpause', 'tick']));
 };
