@@ -64,7 +64,7 @@ internals.AnimationLoop = {
 
     internals.loop();
 
-    this.emit('start');
+    internals.AnimationLoop.emit('start');
   },
   stop() {
 
@@ -74,7 +74,7 @@ internals.AnimationLoop = {
     internals.requestId = null;
     internals.state.status = 'stopped';
 
-    this.emit('stop');
+    internals.AnimationLoop.emit('stop');
   },
   pause() {
 
@@ -85,7 +85,7 @@ internals.AnimationLoop = {
 
       internals.animations.forEach(internals.callPause);
 
-      this.emit('unpause');
+      internals.AnimationLoop.emit('unpause');
 
       internals.loop();
       return;
@@ -96,7 +96,7 @@ internals.AnimationLoop = {
     internals.paused = Date.now();
     internals.state.status = 'paused';
 
-    this.emit('pause');
+    internals.AnimationLoop.emit('pause');
   },
   register(animation, auto = true) {
 
