@@ -9,7 +9,7 @@ show the already builded example:
 ```examples/slide/build/index.html```
 
 
-### Build using webpack-dev-server
+### Build example using webpack-dev-server
 
 ```
 npm install && npm run demo

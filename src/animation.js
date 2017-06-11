@@ -200,3 +200,5 @@ export default internal.Animation = (options = {}) => {
 
   return Object.assign(animation, Emitter(['start', 'stop', 'pause', 'unpause', 'tick']));
 };
+
+internal.Animation.isAnimation = input => isObject(input) && input.isZwipAnimation === true;
