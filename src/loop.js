@@ -38,7 +38,7 @@ internal.MethodCaller = (key, ...args) => {
 
   return animation => {
 
-    console.log(internal.counter, animation, animation.frequency, internal.counter % animation.frequency)
+    // console.log(internal.counter, animation, animation.frequency, internal.counter % animation.frequency)
     if (animation[key] && (internal.counter % animation.frequency === 0))
       animation[key](...args);
 

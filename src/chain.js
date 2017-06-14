@@ -49,18 +49,21 @@ const Chain = (options = {}) => {
 
       let items = animations;
 
-      const reverseHasChanged = reverse !== _reverse
+      const reverseHasChanged = reverse !== _reverse;
       if (reverseHasChanged) {
         _reverse = !_reverse;
-        items = animations.reverse();
+      }
+      if (reverse) {
+        items = animations.slice(0).reverse();
       }
 
       const _startAnimation = animation => {
 
         const options = {};
 
-        // if (reverse && _reverse)
-        if (reverseHasChanged )
+        // if (reverse && reverseHasChanged)
+        // if (reverseHasChanged )
+        if (reverseHasChanged)
           options.reverse = !animation.reverse;
         // options.reverse = reverse;
 

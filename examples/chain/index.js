@@ -2,7 +2,7 @@ import Loop from '../../src/loop';
 import Animation from '../../src/animation';
 import { isObject, isElement, isArray, isInteger, noop } from '../../src/utils';
 import Chain from '../../src/chain';
-import LastAnimation from 'zwip-fade';
+import FadeAnimation from 'zwip-fade';
 import '../../src/polyfills/requestAnimationFrame';
 import '../../src/polyfills/matchesSelector';
 
@@ -10,14 +10,13 @@ window.log = console.log.bind(console);
 window.error = console.error.bind(console);
 
 
-const FirstAnimation = ({ element, duration, reverse }) => {
+const SlideAnimation = ({ element, duration, reverse }) => {
 
   const parentWidth = element.parentNode.clientWidth;
   const width = element.clientWidth;
 
   const min = 0;
   const max = parentWidth - width;
-  let _reverse;
 
   element.style.position = 'absolute';
 
@@ -31,7 +30,6 @@ const FirstAnimation = ({ element, duration, reverse }) => {
 
   const render = () => {
     const v = animation.value;
-    // log('v:',v);
     element.style.left = v * max;
   };
 
@@ -44,9 +42,9 @@ const FirstAnimation = ({ element, duration, reverse }) => {
 
 const MyChain = ({ element, reverse, duration, frequency }) => {
 
-  const firstAnimation = FirstAnimation({ element, reverse: reverse, frequency, duration: Math.ceil(duration * (1/3)) });
+  const firstAnimation = SlideAnimation({ element, reverse: reverse, frequency, duration: Math.ceil(duration * (1/3)) });
 
-  const lastAnimation = LastAnimation({ element, reverse: !reverse, frequency, duration: Math.floor(duration * (2/3)) });
+  const lastAnimation = FadeAnimation({ element: element.firstChild, reverse: !reverse, frequency, duration: Math.floor(duration * (2/3)) });
 
   return Chain({
     duration,
@@ -54,13 +52,7 @@ const MyChain = ({ element, reverse, duration, frequency }) => {
     animations: [
       firstAnimation,
       lastAnimation
-    ],
-    start() {
-      // log('MyChain.start()');
-    },
-    stop() {
-      // log('MyChain.stop()');
-    }
+    ]
   });
 };
 
@@ -68,48 +60,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const circle = document.body.appendChild(document.createElement('div'));
   const loopState = document.body.appendChild(document.createElement('pre'));
-  const state = document.body.appendChild(document.createElement('pre'));
+  const container = document.body.appendChild(document.createElement('pre'));
+  const firstAnimationState = container.appendChild(document.createElement('pre'));
+  const lastAnimationState = container.appendChild(document.createElement('pre'));
 
   circle.classList.add('circle');
-  circle.innerText = 'click me';
+  circle.innerHTML = '<div></div><strong>click me</strong>';
 
   loopState.classList.add('loop-state');
-  state.classList.add('animation-state');
+  container.classList.add('animation-state');
 
-  const myChain = MyChain({ element: circle, duration: 3000, frequency: 1000 });
+  const myChain = MyChain({ element: circle, duration: 1000, frequency: 1 });
 
   let reverse = false;
 
-  const displayState = () => {
+  const displayLoopState = () => {
     loopState.innerHTML = `Loop state: ${JSON.stringify(Loop.state, null, 2)}`;
-    state.innerHTML = `Animation state: ${JSON.stringify(myChain.state, null, 2)}`;
   };
-
-  // const resetAnimation = () => {
-  //   myAnimation.stop();
-  //   reverse = !reverse;
-  //   myAnimation.start({ reverse })
-  // };
+  const displaySlideAnimationState = () => {
+    firstAnimationState.innerHTML = `firstAnimation state: ${JSON.stringify(myChain.animations[0].state, null, 2)}`;
+  };
+  const displayFadeAnimationState = () => {
+    lastAnimationState.innerHTML = `lastAnimation state: ${JSON.stringify(myChain.animations[1].state, null, 2)}`;
+  };
 
   circle.addEventListener('mouseup', () => {
 
     myChain.start({ reverse });
     reverse = !reverse;
-    // log('REVERSED', reverse)
 
+    myChain.animations[0].on('tick', displaySlideAnimationState);
+    myChain.animations[1].on('tick', displayFadeAnimationState);
   });
 
-  myChain.animations[1].on('tick', displayState);
-  //
-  // myAnimation.on('start', () => {
-  //   log('start()')
-  // });
-  //
-  // myAnimation.on('stop', () => {
-  //   reverse = !reverse;
-  // });
+  Loop.on(['tick', 'stop'], displayLoopState);
 
-
-  displayState()
-
+  displayLoopState();
+  displaySlideAnimationState();
+  displayFadeAnimationState();
 });

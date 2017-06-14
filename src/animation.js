@@ -68,6 +68,7 @@ export default internal.Animation = (options = {}) => {
   let _pausedAt;
   let _pausedTime;
   let _frameCounter;
+
   console.log('frequency', _frequency)
 
   const animation = {

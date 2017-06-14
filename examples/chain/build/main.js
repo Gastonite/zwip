@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "f9a28bf2b80864673a0d"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "323c8bc43368b0c3be3d"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -839,6 +839,205 @@ internals.Emitter = module.exports = function (allowedTypes) {
 
 /***/ }),
 
+/***/ "../../../zwip-fade/node_modules/style-attr/lib/index.js":
+/***/ (function(module, exports) {
+
+
+
+/*:: type Attr = { [key: string]: string | number } */
+/*:: type Opts = { preserveNumbers: ?boolean } */
+
+/*
+
+style-attr
+====
+
+Very simple parsing and stringifying of style attributes.
+
+`parse`
+----
+
+Convert a style attribute string to an object.
+
+*/
+
+/*:: declare function parse (raw: string, opts: ?Opts): Attr */
+function parse(raw, opts) {
+  opts = opts || {};
+
+  var preserveNumbers = opts.preserveNumbers;
+  var trim = function (s) {
+    return s.trim();
+  };
+  var obj = {};
+
+  getKeyValueChunks(raw).map(trim).filter(Boolean).forEach(function (item) {
+    // split with `.indexOf` rather than `.split` because the value may also contain colons.
+    var pos = item.indexOf(':');
+    var key = item.substr(0, pos).trim();
+    var val = item.substr(pos + 1).trim();
+    if (preserveNumbers && isNumeric(val)) {
+      val = Number(val);
+    }
+
+    obj[key] = val;
+  });
+
+  return obj;
+}
+
+/*
+
+`isNumeric`
+----
+
+Check if a value is numeric.
+Via: https://stackoverflow.com/a/1830844/9324
+
+*/
+
+/*:: declare function isNumeric (n: any): boolean */
+
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+/*
+
+`getKeyValueChunks`
+----
+
+Split a string into chunks matching `<key>: <value>`
+
+*/
+/*:: declare function getKeyValueChunks (raw: string): Array<string> */
+function getKeyValueChunks(raw) {
+  var chunks = [];
+  var offset = 0;
+  var sep = ';';
+  var hasUnclosedUrl = /url\([^\)]+$/;
+  var chunk = '';
+  var nextSplit;
+  while (offset < raw.length) {
+    nextSplit = raw.indexOf(sep, offset);
+    if (nextSplit === -1) {
+      nextSplit = raw.length;
+    }
+
+    chunk += raw.substring(offset, nextSplit);
+
+    // data URIs can contain semicolons, so make sure we get the whole thing
+    if (hasUnclosedUrl.test(chunk)) {
+      chunk += ';';
+      offset = nextSplit + 1;
+      continue;
+    }
+
+    chunks.push(chunk);
+    chunk = '';
+    offset = nextSplit + 1;
+  }
+
+  return chunks;
+}
+
+/*
+
+`stringify`
+----
+
+Convert an object into an attribute string
+
+*/
+/*:: declare function stringify (obj: Attr): string */
+function stringify(obj) {
+  return Object.keys(obj).map(function (key) {
+    return key + ':' + obj[key];
+  }).join(';');
+}
+
+/*
+
+`normalize`
+----
+
+Normalize an attribute string (eg. collapse duplicates)
+
+*/
+/*:: declare function normalize (str: string, opts: ?Opts): string */
+function normalize(str, opts) {
+  return stringify(parse(str, opts));
+}
+
+module.exports.parse = parse;
+module.exports.stringify = stringify;
+module.exports.normalize = normalize;
+
+/***/ }),
+
+/***/ "../../../zwip-fade/src/animation.js":
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_zwip_src_animation__ = __webpack_require__("../../src/animation.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_zwip_src_animation___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_zwip_src_animation__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_style_attr__ = __webpack_require__("../../../zwip-fade/node_modules/style-attr/lib/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_style_attr___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_style_attr__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_zwip_src_utils__ = __webpack_require__("../../src/utils.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_zwip_src_utils___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_zwip_src_utils__);
+
+
+
+
+
+const FadeAnimation = (options = {}) => {
+
+  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2_zwip_src_utils__["isObject"])(options, 'options');
+
+  const { element, start: _start = __WEBPACK_IMPORTED_MODULE_2_zwip_src_utils__["noop"], stop: _stop = __WEBPACK_IMPORTED_MODULE_2_zwip_src_utils__["noop"] } = options;
+
+  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2_zwip_src_utils__["isElement"])(element, 'element');
+  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2_zwip_src_utils__["isFunction"])(_start, 'start');
+
+  let style;
+
+  const update = () => {
+
+    style.opacity = animation.value;
+  };
+
+  const render = () => {
+
+    element.setAttribute('style', __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1_style_attr__["stringify"])(style));
+  };
+
+  const start = options => {
+
+    log('Fade.start()', animation.reverse);
+
+    style = element.getAttribute('style');
+    style = style ? __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1_style_attr__["parse"])(style) : {};
+
+    style.opacity = element.style.opacity ? parseFloat(element.style.opacity) : animation.reverse ? 0 : 1;
+
+    _start(options);
+  };
+
+  const stop = () => {
+
+    _stop();
+  };
+
+  const animation = __WEBPACK_IMPORTED_MODULE_0_zwip_src_animation___default()(Object.assign(options, { update, render, start, stop }));
+
+  return animation;
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (FadeAnimation);
+
+/***/ }),
+
 /***/ "../../src/animation.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1297,37 +1496,6 @@ var easings = exports.easings = {
 
 /***/ }),
 
-/***/ "../../src/index.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Chain = exports.Loop = exports.Animation = undefined;
-
-var _animation = __webpack_require__("../../src/animation.js");
-
-var _animation2 = _interopRequireDefault(_animation);
-
-var _loop = __webpack_require__("../../src/loop.js");
-
-var _loop2 = _interopRequireDefault(_loop);
-
-var _chain = __webpack_require__("../../src/chain.js");
-
-var _chain2 = _interopRequireDefault(_chain);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.Animation = _animation2.default;
-exports.Loop = _loop2.default;
-exports.Chain = _chain2.default;
-
-/***/ }),
-
 /***/ "../../src/loop.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1511,6 +1679,36 @@ exports.default = Object.assign(internal.AnimationLoop, (0, _klak2.default)(['st
 
 /***/ }),
 
+/***/ "../../src/polyfills/matchesSelector.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Element.prototype.matches = Element.prototype.matches || Element.prototype.matchesSelector || Element.prototype.mozMatchesSelector || Element.prototype.msMatchesSelector || Element.prototype.oMatchesSelector || Element.prototype.webkitMatchesSelector || function (s) {
+  var matches = (this.document || this.ownerDocument).querySelectorAll(s);
+  var i = matches.length;
+  while (--i >= 0 && matches.item(i) !== this) {}
+  return i > -1;
+};
+
+/***/ }),
+
+/***/ "../../src/polyfills/requestAnimationFrame.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function (callback) {
+  window.setTimeout(function () {
+
+    callback(+new Date());
+  }, 1000 / 60);
+};
+
+/***/ }),
+
 /***/ "../../src/utils.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1606,83 +1804,127 @@ var round = exports.round = function round(value, decimals) {
 "use strict";
 
 
-var _src = __webpack_require__("../../src/index.js");
+var _loop = __webpack_require__("../../src/loop.js");
 
-var style = 'position:absolute;left:0;background-color:#6495ed;width:30px;height:30px;text-align:center';
+var _loop2 = _interopRequireDefault(_loop);
 
-var MyAnimation = function MyAnimation(element) {
+var _animation = __webpack_require__("../../src/animation.js");
 
-  var _width = element.clientWidth;
-  var _parentWidth = element.parentNode.clientWidth;
-  var _left = void 0;
+var _animation2 = _interopRequireDefault(_animation);
 
-  var start = function start(_ref) {
-    var reverse = _ref.reverse;
-    return _left = reverse ? _parentWidth : 0;
+var _utils = __webpack_require__("../../src/utils.js");
+
+var _chain = __webpack_require__("../../src/chain.js");
+
+var _chain2 = _interopRequireDefault(_chain);
+
+var _zwipFade = __webpack_require__("../../../zwip-fade/src/animation.js");
+
+var _zwipFade2 = _interopRequireDefault(_zwipFade);
+
+__webpack_require__("../../src/polyfills/requestAnimationFrame.js");
+
+__webpack_require__("../../src/polyfills/matchesSelector.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+window.log = console.log.bind(console);
+window.error = console.error.bind(console);
+
+var SlideAnimation = function SlideAnimation(_ref) {
+  var element = _ref.element,
+      duration = _ref.duration,
+      reverse = _ref.reverse;
+
+
+  var parentWidth = element.parentNode.clientWidth;
+  var width = element.clientWidth;
+
+  var min = 0;
+  var max = parentWidth - width;
+
+  element.style.position = 'absolute';
+
+  var _setLeft = function _setLeft(left) {
+    return element.style.left = left + 'px';
   };
-  var stop = function stop() {
-    return console.error('STOOOOOPP!');
+
+  var start = function start() {
+    log('Slide.start()', animation.reverse);
+
+    _setLeft(animation.reverse ? max : min);
   };
-  var update = function update() {
-    return _left = animation.value * (_parentWidth - _width);
-  };
+
   var render = function render() {
-    return element.style.left = _left + 'px';
+    var v = animation.value;
+    element.style.left = v * max;
   };
 
-  var animation = (0, _src.Animation)({
-    start: start, // Called just before the animation starts (optional)
-    stop: stop, // Called just after the animation stops (optional)
-    update: update, // Called once per frame before render (optional)
-    render: render, // Called once per frame to render whatever you like (required)
-    //duration: 800,        // Duration of the animation in milliseconds (required except when 'nbFrames' is provided)
-    nbFrames: 10, // The total number of frames (required except when 'duration' is provided)
-    easing: 'easeInCubic', // Easing function (optional, default to linear)
-    frequency: 10 // Controls the frequency at which the animation is updated by the loop (defaults to 1, which means every frames)
-  });
+  var animation = (0, _animation2.default)({ start: start, render: render, duration: duration, reverse: reverse });
 
   return animation;
 };
 
+var MyChain = function MyChain(_ref2) {
+  var element = _ref2.element,
+      reverse = _ref2.reverse,
+      duration = _ref2.duration,
+      frequency = _ref2.frequency;
+
+
+  var firstAnimation = SlideAnimation({ element: element, reverse: reverse, frequency: frequency, duration: Math.ceil(duration * (1 / 3)) });
+
+  var lastAnimation = (0, _zwipFade2.default)({ element: element.firstChild, reverse: !reverse, frequency: frequency, duration: Math.floor(duration * (2 / 3)) });
+
+  return (0, _chain2.default)({
+    duration: duration,
+    frequency: frequency,
+    animations: [firstAnimation, lastAnimation]
+  });
+};
+
 document.addEventListener('DOMContentLoaded', function () {
 
-  var myElement = document.body.appendChild(document.createElement('div'));
+  var circle = document.body.appendChild(document.createElement('div'));
   var loopState = document.body.appendChild(document.createElement('pre'));
-  var animationState = document.body.appendChild(document.createElement('pre'));
+  var container = document.body.appendChild(document.createElement('pre'));
+  var firstAnimationState = container.appendChild(document.createElement('pre'));
+  var lastAnimationState = container.appendChild(document.createElement('pre'));
+
+  circle.classList.add('circle');
+  circle.innerHTML = '<div></div><strong>click me</strong>';
 
   loopState.classList.add('loop-state');
-  animationState.classList.add('animation-state');
+  container.classList.add('animation-state');
 
-  myElement.setAttribute('style', style);
-  myElement.innerText = 'click me';
-
-  var myAnimation = MyAnimation(myElement);
-
-  var displayAnimationState = function displayAnimationState() {
-    animationState.innerHTML = 'Animation state: ' + JSON.stringify(myAnimation.state, null, 2);
-  };
-  var displayLoopState = function displayLoopState() {
-    loopState.innerHTML = 'Loop state: ' + JSON.stringify(_src.Loop.state, null, 2);
-  };
+  var myChain = MyChain({ element: circle, duration: 1000, frequency: 1 });
 
   var reverse = false;
 
-  myAnimation.on('start', function () {
-    return console.error('It begins ...');
-  });
-  myAnimation.on('stop', [function () {
-    return reverse = !reverse;
-  }, displayLoopState]);
-  myAnimation.on('tick', displayAnimationState);
+  var displayLoopState = function displayLoopState() {
+    loopState.innerHTML = 'Loop state: ' + JSON.stringify(_loop2.default.state, null, 2);
+  };
+  var displaySlideAnimationState = function displaySlideAnimationState() {
+    firstAnimationState.innerHTML = 'firstAnimation state: ' + JSON.stringify(myChain.animations[0].state, null, 2);
+  };
+  var displayFadeAnimationState = function displayFadeAnimationState() {
+    lastAnimationState.innerHTML = 'lastAnimation state: ' + JSON.stringify(myChain.animations[1].state, null, 2);
+  };
 
-  _src.Loop.on('tick', displayLoopState);
+  circle.addEventListener('mouseup', function () {
 
-  myElement.addEventListener('mouseup', function () {
-    return myAnimation.start({ reverse: reverse });
+    myChain.start({ reverse: reverse });
+    reverse = !reverse;
+
+    myChain.animations[0].on('tick', displaySlideAnimationState);
+    myChain.animations[1].on('tick', displayFadeAnimationState);
   });
+
+  _loop2.default.on(['tick', 'stop'], displayLoopState);
 
   displayLoopState();
-  displayAnimationState();
+  displaySlideAnimationState();
+  displayFadeAnimationState();
 });
 
 /***/ })
