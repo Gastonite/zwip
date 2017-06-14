@@ -50,10 +50,7 @@ export default internal.Animation = (options = {}) => {
 
   assert(isInteger(_frequency) && _frequency > 0, `'frequency' must be an integer greater than 0`);
 
-  // console.log(duration, nbFrames, )
-  if (!(!isUndefined(duration) ^ !isUndefined(nbFrames)))
-    throw new Error(`Exactly one option of ['duration', 'nbFrames'] is required`);
-
+  assert(!isUndefined(duration) ^ !isUndefined(nbFrames), `Exactly one option of ['duration', 'nbFrames'] is required`);
 
   if (duration)
     assert(isInteger(duration) && duration > 0, `'duration' must be an integer greater than 0`);
@@ -69,8 +66,6 @@ export default internal.Animation = (options = {}) => {
   let _pausedTime;
   let _frameCounter;
 
-  console.log('frequency', _frequency)
-
   const animation = {
     isZwipAnimation: true,
     start(options = {}) {
@@ -78,11 +73,8 @@ export default internal.Animation = (options = {}) => {
       if (_startedAt)
         throw new Error(`Animation is already started`);
 
-      // console.log('Animation.start()', options)
-
       isObject(options, 'options');
 
-      // const reverse = 'reverse' in options ? !!options.reverse : _reverse;
       if ('reverse' in options)
         _reverse = !!options.reverse;
 
@@ -90,8 +82,8 @@ export default internal.Animation = (options = {}) => {
       _startedAt = Date.now();
       _frameCounter = 0;
       _pausedTime = 0;
-
       _start(options);
+      _status = 'started';
 
       Loop.register(animation);
 
@@ -102,12 +94,13 @@ export default internal.Animation = (options = {}) => {
       _pausedAt = null;
       _startedAt = null;
       _pausedTime = null;
-
+      _status = 'stopped';
       _stop();
 
       Loop.deregister(animation);
 
       animation.emit('stop');
+
     },
     pause() {
 
@@ -203,6 +196,7 @@ export default internal.Animation = (options = {}) => {
     },
     get state() {
       return {
+        status: _status,
         value: animation.value,
         nbFrames: animation.nbFrames,
         duration: animation.duration,
@@ -212,7 +206,11 @@ export default internal.Animation = (options = {}) => {
     }
   };
 
-  return Object.assign(animation, Emitter(['start', 'stop', 'pause', 'unpause', 'tick']));
+  Object.assign(animation, Emitter(['start', 'stop', 'pause', 'unpause', 'tick']));
+
+  let _status = 'created';
+
+  return animation;
 };
 
 internal.Animation.isAnimation = input => isObject(input) && input.isZwipAnimation === true;

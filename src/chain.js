@@ -87,8 +87,8 @@ const Chain = (options = {}) => {
     },
     stop() {
 
-      stop();
       _started = false;
+      stop();
     }
   };
 

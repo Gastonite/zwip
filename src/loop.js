@@ -15,7 +15,7 @@ const internal = {
 
 internal.loop = () => {
 
-  if (internal.paused)
+  if (internal.state.status !== 'started')
     return;
 
   internal.requestId = requestAnimationFrame(internal.loop);
@@ -144,13 +144,10 @@ internal.AnimationLoop = {
     internal.state.animations = internal.animations.length;
     internal.state.frames = internal.counter;
 
-    const animations = internal.animations.filter(internal.isNotPaused);
 
-    animations.forEach(internal.emitTick);
-
-    animations.forEach(internal.callUpdate);
-
-    animations.forEach(internal.callRender);
+    internal.animations.filter(internal.isNotPaused).forEach(internal.emitTick);
+    internal.animations.filter(internal.isNotPaused).forEach(internal.callUpdate);
+    internal.animations.filter(internal.isNotPaused).forEach(internal.callRender);
   },
 
   get state() {
