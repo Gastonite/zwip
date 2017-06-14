@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "f9a28bf2b80864673a0d"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "d4c3f8b4855606e02da3"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -1635,10 +1635,10 @@ var MyAnimation = function MyAnimation(element) {
     stop: stop, // Called just after the animation stops (optional)
     update: update, // Called once per frame before render (optional)
     render: render, // Called once per frame to render whatever you like (required)
-    //duration: 800,        // Duration of the animation in milliseconds (required except when 'nbFrames' is provided)
-    nbFrames: 10, // The total number of frames (required except when 'duration' is provided)
+    duration: 800, // Duration of the animation in milliseconds (required except when 'nbFrames' is provided)
+    //nbFrames: 10,           // The total number of frames (required except when 'duration' is provided)
     easing: 'easeInCubic', // Easing function (optional, default to linear)
-    frequency: 10 // Controls the frequency at which the animation is updated by the loop (defaults to 1, which means every frames)
+    frequency: 1 // Controls the frequency at which the animation is updated by the loop (defaults to 1, which means every frames)
   });
 
   return animation;

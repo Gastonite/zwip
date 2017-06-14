@@ -18,10 +18,10 @@ const MyAnimation = (element) => {
     stop,                   // Called just after the animation stops (optional)
     update,                 // Called once per frame before render (optional)
     render,                 // Called once per frame to render whatever you like (required)
-    //duration: 800,        // Duration of the animation in milliseconds (required except when 'nbFrames' is provided)
-    nbFrames: 10,           // The total number of frames (required except when 'duration' is provided)
+    duration: 800,        // Duration of the animation in milliseconds (required except when 'nbFrames' is provided)
+    //nbFrames: 10,           // The total number of frames (required except when 'duration' is provided)
     easing: 'easeInCubic',  // Easing function (optional, default to linear)
-    frequency: 10           // Controls the frequency at which the animation is updated by the loop (defaults to 1, which means every frames)
+    frequency: 1           // Controls the frequency at which the animation is updated by the loop (defaults to 1, which means every frames)
   });
 
   return animation;
