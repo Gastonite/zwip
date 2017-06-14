@@ -59,7 +59,7 @@ export default internal.Animation = (options = {}) => {
     duration,
   } = options = internal.parseOptions(options);
 
-  let { nbFrames, reverse } = options;
+  let { nbFrames, reverse:_reverse } = options;
 
   let _startedAt;
   let _pausedAt;
@@ -73,10 +73,13 @@ export default internal.Animation = (options = {}) => {
       if (_startedAt)
         throw new Error(`Animation is already started`);
 
+      // console.log('Animation.start()', options)
+
       isObject(options, 'options');
 
+      // const reverse = 'reverse' in options ? !!options.reverse : _reverse;
       if ('reverse' in options)
-        reverse = !!options.reverse;
+        _reverse = !!options.reverse;
 
       _pausedAt = null;
       _startedAt = Date.now();
@@ -140,6 +143,9 @@ export default internal.Animation = (options = {}) => {
     get currentFrame() {
       return _frameCounter;
     },
+    get reverse() {
+      return _reverse;
+    },
     get pausedAt() {
       return _pausedAt;
     },
@@ -161,7 +167,7 @@ export default internal.Animation = (options = {}) => {
 
       const value = _frameCounter / nbFrames;
 
-      return _easing(!reverse ? value : (1 - value));
+      return _easing(!_reverse ? value : (1 - value));
     },
     get nbFrames() {
 

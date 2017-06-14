@@ -6,7 +6,7 @@
   "author": "Clément Pasquier <clement@n00sphere.net>",
   "license": "GPL-3.0",
   "scripts": {
-    "demo": "webpack-dev-server --config examples/slide/webpack.config.js --progress --colors"
+    "demo": "webpack-dev-server --config examples/simple/webpack.config.js --progress --colors"
   },
   "keywords": [
     "animation",
@@ -25,5 +25,8 @@
     "lodash.kebabcase": "^4.1.1",
     "webpack": "^2.6.1",
     "webpack-dev-server": "^2.4.5"
+  },
+  "dependencies": {
+    "zwip-fade": "^1.1.2"
   }
 }

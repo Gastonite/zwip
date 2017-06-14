@@ -2,7 +2,7 @@ import Emitter from 'klak';
 
 import { assert, isRequired, isFunction, isString, isObject, isInteger, noop } from './utils';
 
-const internals = {
+const internal = {
   animations: [],
   listeners: [],
   state: {
@@ -13,90 +13,90 @@ const internals = {
 };
 
 
-internals.loop = () => {
+internal.loop = () => {
 
-  if (internals.paused)
+  if (internal.paused)
     return;
 
-  internals.requestId = requestAnimationFrame(internals.loop);
-  internals.now = Date.now();
+  internal.requestId = requestAnimationFrame(internal.loop);
+  internal.now = Date.now();
 
 
-  internals.interval = 1000 / internals.fps;
-  internals.delta = internals.now - internals.then;
+  internal.interval = 1000 / internal.fps;
+  internal.delta = internal.now - internal.then;
 
-  if (internals.delta > internals.interval) {
+  if (internal.delta > internal.interval) {
 
-    internals.AnimationLoop.frame();
+    internal.AnimationLoop.frame();
   }
 };
 
-internals.MethodCaller = (key, ...args) => {
+internal.MethodCaller = (key, ...args) => {
 
   isRequired(key, 'key');
   isString(key, 'key');
 
   return animation => {
 
-    if (animation[key] && (internals.counter % animation.frequency === 0))
+    if (animation[key] && (internal.counter % animation.frequency === 0))
       animation[key](...args);
 
   }
 };
 
-internals.emitTick = internals.MethodCaller('emit', 'tick');
-internals.callUpdate = internals.MethodCaller('update');
-internals.callRender = internals.MethodCaller('render');
-internals.callPause = internals.MethodCaller('pause');
+internal.emitTick = internal.MethodCaller('emit', 'tick');
+internal.callUpdate = internal.MethodCaller('update');
+internal.callRender = internal.MethodCaller('render');
+internal.callPause = internal.MethodCaller('pause');
 
-internals.isNotPaused = object => !object.pausedAt;
+internal.isNotPaused = object => !object.pausedAt;
 
-internals.AnimationLoop = {
+internal.AnimationLoop = {
   start() {
 
-    if (internals.requestId)
+    if (internal.requestId)
       throw new Error('Loop is already started');
 
-    internals.counter = 0;
-    internals.paused = null;
-    internals.then = Date.now();
-    internals.state.status = 'started';
+    internal.counter = 0;
+    internal.paused = null;
+    internal.then = Date.now();
+    internal.state.status = 'started';
 
-    internals.loop();
+    internal.loop();
 
-    internals.AnimationLoop.emit('start');
+    internal.AnimationLoop.emit('start');
   },
   stop() {
 
-    if (internals.requestId)
-      cancelAnimationFrame(internals.requestId);
+    if (internal.requestId)
+      cancelAnimationFrame(internal.requestId);
 
-    internals.requestId = null;
-    internals.state.status = 'stopped';
+    internal.requestId = null;
+    internal.state.status = 'stopped';
 
-    internals.AnimationLoop.emit('stop');
+    internal.AnimationLoop.emit('stop');
   },
   pause() {
 
-    if (internals.paused) {
+    if (internal.paused) {
 
-      internals.paused = null;
-      internals.state.status = 'started';
+      internal.paused = null;
+      internal.state.status = 'started';
 
-      internals.animations.forEach(internals.callPause);
+      internal.animations.forEach(internal.callPause);
 
-      internals.AnimationLoop.emit('unpause');
+      internal.AnimationLoop.emit('unpause');
 
-      internals.loop();
+      internal.loop();
       return;
     }
 
-    internals.animations.forEach(internals.callPause);
+    internal.animations.forEach(internal.callPause);
 
-    internals.paused = Date.now();
-    internals.state.status = 'paused';
+    internal.paused = Date.now();
+    internal.state.status = 'paused';
 
-    internals.AnimationLoop.emit('pause');
+    internal.AnimationLoop.emit('pause');
   },
   register(animation, auto = true) {
 
@@ -112,62 +112,62 @@ internals.AnimationLoop = {
     animation.render = animation.render || noop;
     animation.update = animation.update || noop;
 
-    if (auto && !internals.requestId)
-      internals.AnimationLoop.start();
+    if (auto && !internal.requestId)
+      internal.AnimationLoop.start();
 
-    if (internals.animations.includes(animation))
+    if (internal.animations.includes(animation))
       return;
 
-    internals.animations.push(animation);
+    internal.animations.push(animation);
 
   },
   deregister(animation, auto = true) {
 
-    const index = internals.animations.indexOf(animation);
+    const index = internal.animations.indexOf(animation);
 
     if (~index)
-      internals.animations.splice(index, 1);
+      internal.animations.splice(index, 1);
 
-    if (auto && internals.requestId && !internals.animations.length)
-      internals.AnimationLoop.stop();
+    if (auto && internal.requestId && !internal.animations.length)
+      internal.AnimationLoop.stop();
 
   },
 
   frame() {
 
-    internals.counter++;
+    internal.counter++;
 
-    internals.elapsed = internals.now - internals.then;
-    internals.then = internals.now - (internals.delta % internals.interval);
+    internal.elapsed = internal.now - internal.then;
+    internal.then = internal.now - (internal.delta % internal.interval);
 
-    internals.state.fps = 1000 / internals.elapsed;
-    internals.state.animations = internals.animations.length;
-    internals.state.frames = internals.counter;
+    internal.state.fps = 1000 / internal.elapsed;
+    internal.state.animations = internal.animations.length;
+    internal.state.frames = internal.counter;
 
-    const animations = internals.animations.filter(internals.isNotPaused);
+    const animations = internal.animations.filter(internal.isNotPaused);
 
-    animations.forEach(internals.emitTick);
+    animations.forEach(internal.emitTick);
 
-    animations.forEach(internals.callUpdate);
+    animations.forEach(internal.callUpdate);
 
-    animations.forEach(internals.callRender);
+    animations.forEach(internal.callRender);
   },
 
   get state() {
-    return internals.state;
+    return internal.state;
   },
   get fps() {
-    return internals.fps;
+    return internal.fps;
   },
   set fps(newValue) {
 
     isInteger(newValue, 'fps');
 
-    internals.fps = newValue;
+    internal.fps = newValue;
   }
 };
 
 export default Object.assign(
-  internals.AnimationLoop,
-  Emitter(['start', 'stop', 'pause', 'unpause'])
+  internal.AnimationLoop,
+  Emitter(['start', 'stop', 'pause', 'unpause', 'tick'])
 );
