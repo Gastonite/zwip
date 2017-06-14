@@ -2,6 +2,35 @@
 
 Utility for creating JS animations on top of W3C [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) function.
 
+## Examples
+
+To quickly show it in action, clone the repo :
+```
+git clone https://github.com/Gastonite/zwip
+```
+the install the dependencies :
+```
+npm install
+```
+or
+```
+yarn
+```
+then cd into an example directory:
+``` 
+cd examples/<example-name>
+```
+then :
+```
+npm run dev
+```
+or
+```
+yarn dev
+```
+Now the demo is visible at [http://localhost:3000](http://localhost:3000)
+
+
 ## Installation
 
 ```
@@ -82,19 +111,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 ```
-## Examples
-
-To see it in action :
-
-``` 
-cd examples/<example-name>
-```
-then :
-```
-npm run demo
-```
-or
-```
-yarn demo
-```
-Now the demo is visible at [http://localhost:3000](http://localhost:3000)
