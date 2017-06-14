@@ -1,6 +1,6 @@
 import Loop from './loop';
 import Emitter from 'klak';
-import { isInteger, isString, isObject, isFunction, isUndefined, noop } from './utils';
+import { isInteger, isString, isObject, isFunction, isUndefined, noop, assert } from './utils';
 import { easings } from './easings';
 
 const internal = {};
@@ -23,48 +23,52 @@ internal.parseEasing = (easing = easings.linear) => {
   return easing;
 };
 
-internal.parseOptions = input => {
-  const options = {};
-
-  isObject(input, 'options');
-  isUndefined(input.isZwipAnimation, 'isZwipAnimation');
-
-  const { start, stop, update, render, reverse, duration, nbFrames, easing } = input;
-
-  options.start = !start ? noop : isFunction(start, 'start');
-  options.stop = !stop ? noop : isFunction(stop, 'stop');
-  options.update = !update ? noop : isFunction(update, 'update');
-  options.render = !render ? noop : isFunction(render, 'render');
-  options.reverse = !!reverse;
-
-  if (!(duration ^ nbFrames))
-    throw new Error(`Exactly one option of ['duration', 'nbFrames'] is required`);
-
-  options.duration = duration && isInteger(duration, 'duration');
-  options.nbFrames = nbFrames && isInteger(nbFrames, 'nbFrames');
-
-  options.easing = internal.parseEasing(easing);
-
-  return options;
-};
-
 export default internal.Animation = (options = {}) => {
 
-  const {
-    start:_start,
-    stop:_stop,
-    update:_update,
-    easing:_easing,
-    render: _render,
-    duration,
-  } = options = internal.parseOptions(options);
+  isObject(options, 'options');
+  isUndefined(options.isZwipAnimation, 'isZwipAnimation');
 
-  let { nbFrames, reverse:_reverse } = options;
+  const {
+    start:_start = noop,
+    stop:_stop = noop,
+    update:_update = noop,
+    render:_render = noop,
+    duration,
+    frequency:_frequency = 1
+  } = options;
+
+  let {
+    reverse:_reverse,
+    easing:_easing,
+    nbFrames,
+  } = options;
+
+  assert(isFunction(_start), `'start' must be a function`);
+  assert(isFunction(_stop), `'stop' must be a function`);
+  assert(isFunction(_update), `'update' must be a function`);
+  assert(isFunction(_render), `'render' must be a function`);
+
+  assert(isInteger(_frequency) && _frequency > 0, `'frequency' must be an integer greater than 0`);
+
+  // console.log(duration, nbFrames, )
+  if (!(!isUndefined(duration) ^ !isUndefined(nbFrames)))
+    throw new Error(`Exactly one option of ['duration', 'nbFrames'] is required`);
+
+
+  if (duration)
+    assert(isInteger(duration) && duration > 0, `'duration' must be an integer greater than 0`);
+
+  if (nbFrames)
+    assert(isInteger(nbFrames) && nbFrames > 0, `'nbFrames' must be an integer greater than 0`);
+
+  _easing = internal.parseEasing(_easing);
+  _reverse = !!_reverse;
 
   let _startedAt;
   let _pausedAt;
   let _pausedTime;
   let _frameCounter;
+  console.log('frequency', _frequency)
 
   const animation = {
     isZwipAnimation: true,
@@ -145,6 +149,9 @@ export default internal.Animation = (options = {}) => {
     },
     get reverse() {
       return _reverse;
+    },
+    get frequency() {
+      return _frequency;
     },
     get pausedAt() {
       return _pausedAt;

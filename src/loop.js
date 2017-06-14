@@ -38,6 +38,7 @@ internal.MethodCaller = (key, ...args) => {
 
   return animation => {
 
+    console.log(internal.counter, animation, animation.frequency, internal.counter % animation.frequency)
     if (animation[key] && (internal.counter % animation.frequency === 0))
       animation[key](...args);
 
@@ -102,12 +103,9 @@ internal.AnimationLoop = {
 
     isObject(animation, 'animation');
 
-    animation.frequency = animation.frequency || 1;
+    assert(animation.isZwipAnimation === true, `'animation' must be a ZwipAnimation object`);
 
-    isInteger(animation.frequency, 'frequency');
-
-    assert(isFunction(animation.render) || isFunction(animation.update), `'render' or 'update' method is required`);
-
+    assert(isFunction(animation.render) || isFunction(animation.update), `At least 'render' or 'update' method is required`);
 
     animation.render = animation.render || noop;
     animation.update = animation.update || noop;
@@ -134,6 +132,8 @@ internal.AnimationLoop = {
   },
 
   frame() {
+
+    internal.AnimationLoop.emit('tick');
 
     internal.counter++;
 
