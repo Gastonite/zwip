@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "d4c3f8b4855606e02da3"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "56c3781230e8e2a0051a"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -1096,7 +1096,6 @@ var Chain = function Chain() {
 
   var _options = options = (0, _utils.isObject)(options, 'options'),
       duration = _options.duration,
-      frequency = _options.frequency,
       animations = _options.animations,
       _options$start = _options.start,
       _start = _options$start === undefined ? _utils.noop : _options$start,
@@ -1139,8 +1138,6 @@ var Chain = function Chain() {
 
       reverse = !!reverse;
 
-      error('Chain.start() actual:', _reverse, 'option:', reverse, '1:', animations[0].reverse, '2:', animations[1].reverse);
-
       _start();
 
       var items = animations;
@@ -1157,10 +1154,7 @@ var Chain = function Chain() {
 
         var options = {};
 
-        // if (reverse && reverseHasChanged)
-        // if (reverseHasChanged )
         if (reverseHasChanged) options.reverse = !animation.reverse;
-        // options.reverse = reverse;
 
         animation.start(options);
       };
@@ -1191,58 +1185,6 @@ var Chain = function Chain() {
 
   return Object.freeze(chain);
 };
-// const Chain = (options = {}) => {
-//
-//   const { animations, duration } = _parseOptions(options);
-//
-//   const durationsSum = animations.reduce((sum, animation, i) => {
-//
-//     if (!animation || animation.isZwipAnimation !== true)
-//       throw new Error(`Invalid Chain: Invalid "animations" option: item at position ${i} is not a Zwip animation`);
-//
-//     return sum + animation.duration;
-//   }, 0);
-//
-//   if (duration !== durationsSum)
-//     throw new Error(`Invalid Chain: The total duration is not equal to the sum of the duration of the "animations"`);
-//
-//
-//   return Animation({
-//     duration,
-//     start(options) {
-//
-//       console.log('Chain.start()', options.reverse);
-//
-//       let _items = animations;
-//
-//       if (options.reverse)
-//         _items = _items.reverse();
-//
-//       _items.forEach((animation, i) => {
-//
-//         console.error('chain_'+i, animation.id, animation, options.reverse);
-//
-//         const _startNextAnimation = () => {
-//
-//           // console.error('chain_'+i, 'stop');
-//
-//           if (i < _items.length - 1) {
-//
-//             // console.error('chain_'+i, 'next', _items[i + 1].id, options.reverse);
-//
-//             _items[i + 1].start({ reverse: options.reverse });
-//
-//             animation.off('stop', _startNextAnimation);
-//           }
-//         };
-//
-//         animation.on('stop', _startNextAnimation);
-//       });
-//
-//       animations[0].start();
-//     }
-//   });
-// };
 
 exports.default = Chain;
 

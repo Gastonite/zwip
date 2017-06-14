@@ -5,7 +5,6 @@ const Chain = (options = {}) => {
 
   const {
     duration,
-    frequency,
     animations,
     start = noop,
     stop = noop
@@ -39,11 +38,10 @@ const Chain = (options = {}) => {
         throw new Error(`Chain is already started`);
 
       _started = true;
+
       let { reverse } = isObject(options, 'options');
 
       reverse = !!reverse;
-
-      error('Chain.start() actual:', _reverse, 'option:', reverse, '1:',animations[0].reverse, '2:',animations[1].reverse);
 
       start();
 
@@ -61,11 +59,8 @@ const Chain = (options = {}) => {
 
         const options = {};
 
-        // if (reverse && reverseHasChanged)
-        // if (reverseHasChanged )
         if (reverseHasChanged)
           options.reverse = !animation.reverse;
-        // options.reverse = reverse;
 
         animation.start(options);
       };
@@ -99,57 +94,6 @@ const Chain = (options = {}) => {
 
   return Object.freeze(chain);
 };
-// const Chain = (options = {}) => {
-//
-//   const { animations, duration } = _parseOptions(options);
-//
-//   const durationsSum = animations.reduce((sum, animation, i) => {
-//
-//     if (!animation || animation.isZwipAnimation !== true)
-//       throw new Error(`Invalid Chain: Invalid "animations" option: item at position ${i} is not a Zwip animation`);
-//
-//     return sum + animation.duration;
-//   }, 0);
-//
-//   if (duration !== durationsSum)
-//     throw new Error(`Invalid Chain: The total duration is not equal to the sum of the duration of the "animations"`);
-//
-//
-//   return Animation({
-//     duration,
-//     start(options) {
-//
-//       console.log('Chain.start()', options.reverse);
-//
-//       let _items = animations;
-//
-//       if (options.reverse)
-//         _items = _items.reverse();
-//
-//       _items.forEach((animation, i) => {
-//
-//         console.error('chain_'+i, animation.id, animation, options.reverse);
-//
-//         const _startNextAnimation = () => {
-//
-//           // console.error('chain_'+i, 'stop');
-//
-//           if (i < _items.length - 1) {
-//
-//             // console.error('chain_'+i, 'next', _items[i + 1].id, options.reverse);
-//
-//             _items[i + 1].start({ reverse: options.reverse });
-//
-//             animation.off('stop', _startNextAnimation);
-//           }
-//         };
-//
-//         animation.on('stop', _startNextAnimation);
-//       });
-//
-//       animations[0].start();
-//     }
-//   });
-// };
+
 
 export default Chain;
