@@ -34,9 +34,10 @@ const Chain = (options = {}) => {
     animations,
     start(options = {}) {
 
-      if (_started)
-        throw new Error(`Chain is already started`);
-
+      if (_started) {
+        console.error(`Chain is already started`);
+        return;
+      }
       _started = true;
 
       let { reverse } = isObject(options, 'options');
