@@ -104,14 +104,14 @@ export default internal.Animation = (options = {}) => {
     },
     pause() {
 
-    if (!_pausedAt) {
-      _pausedAt = Date.now();
-      animation.emit('unpause');
-      return;
-    }
+      if (!_pausedAt) {
+        _pausedAt = Date.now();
+        animation.emit('unpause');
+        return;
+      }
 
-    _pausedTime = _pausedTime + (Date.now() - _pausedAt);
-    _pausedAt = null;
+      _pausedTime = _pausedTime + (Date.now() - _pausedAt);
+      _pausedAt = null;
       animation.emit('pause');
 
     },
@@ -130,7 +130,10 @@ export default internal.Animation = (options = {}) => {
 
         const playedTime = animation.played;
 
-        nbFrames = Math.floor((_frameCounter * duration) / playedTime);
+        const recalculated = Math.floor((_frameCounter * duration) / playedTime);
+
+        if (recalculated > _frameCounter)
+          nbFrames = recalculated;
       }
 
       _update();
@@ -168,7 +171,21 @@ export default internal.Animation = (options = {}) => {
 
       const value = _frameCounter / nbFrames;
 
-      return _easing(!_reverse ? value : (1 - value));
+      if (value < 0) {
+        console.log('< 0', value)
+        return 0;
+      }
+
+      if (value > 1) {
+        console.log('> 1', value)
+        return 1;
+      }
+
+      const newValue =  _easing(!_reverse ? value : (1 - value));
+      if (isNaN(newValue)) {
+        console.log('isNaN(newValue)', value)
+      }
+      return newValue;
     },
     get nbFrames() {
 
