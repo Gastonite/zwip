@@ -64,7 +64,7 @@ export default internal.Animation = (options = {}) => {
   let _startedAt;
   let _pausedAt;
   let _pausedTime;
-  let _frameCounter;
+  let _frameCounter = 0;
 
   const animation = {
     isZwipAnimation: true,
@@ -169,23 +169,19 @@ export default internal.Animation = (options = {}) => {
     },
     get value() {
 
-      const value = _frameCounter / nbFrames;
+      const value = _frameCounter / animation.nbFrames;
 
       if (value < 0) {
-        console.log('< 0', value)
+        console.error('value is < 0', value);
         return 0;
       }
 
       if (value > 1) {
-        console.log('> 1', value)
+        console.error('value is > 1', value);
         return 1;
       }
 
-      const newValue =  _easing(!_reverse ? value : (1 - value));
-      if (isNaN(newValue)) {
-        console.log('isNaN(newValue)', value)
-      }
-      return newValue;
+      return _easing(!_reverse ? value : (1 - value));
     },
     get nbFrames() {
 

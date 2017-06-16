@@ -39,6 +39,7 @@ export const isFunction = internals.Assertion(input => typeof input === 'functio
 export const isNumber = internals.Assertion(input => typeof input === 'number', 'must be a number');
 export const isInteger = internals.Assertion(input => Number.isInteger(input), 'must be an integer');
 
+export const isAnimation = input => isObject(input) && input.isZwipAnimation === true;
 
 export const isElement = internals.Assertion(object => {
 
