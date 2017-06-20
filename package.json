@@ -14,7 +14,7 @@
     "request-animation-frame",
     "js"
   ],
-  "devDependencies": {
+  "dependencies": {
     "babel-core": "^6.25.0",
     "babel-loader": "^7.0.0",
     "babel-plugin-transform-export-extensions": "^6.22.0",
