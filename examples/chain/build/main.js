@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "8b6886cd576156ddd71b"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "dc09fd558d550e2f73e7"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -1004,7 +1004,7 @@ const FadeAnimation = (options = {}) => {
 
   const update = () => {
 
-    style.opacity = animation.value;
+    style.opacity = Math.round(animation.value * 100) / 100;
   };
 
   const render = () => {
@@ -1017,14 +1017,19 @@ const FadeAnimation = (options = {}) => {
     style = element.getAttribute('style');
     style = style ? __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1_style_attr__["parse"])(style) : {};
 
-    style.opacity = element.style.opacity ? parseFloat(element.style.opacity) : animation.reverse ? 0 : 1;
+    // style.opacity = animation.reverse ? 0 : 1;
+
+    // element.style.opacity
+    //   ? parseFloat(element.style.opacity)
+    //   : (animation.reverse ? 0 : 1);
 
     _start(options);
   };
 
-  const stop = () => {
-
-    _stop();
+  const stop = options => {
+    // style.opacity = animation.reverse ? 1 : 0;
+    // render();
+    _stop(options);
   };
 
   const animation = __WEBPACK_IMPORTED_MODULE_0_zwip_src_animation___default()(Object.assign(options, { update, render, start, stop }));
@@ -1112,8 +1117,7 @@ exports.default = internal.Animation = function () {
 
   (0, _utils.assert)((0, _utils.isInteger)(_frequency) && _frequency > 0, '\'frequency\' must be an integer greater than 0');
 
-  // console.log(duration, nbFrames, )
-  if (!(!(0, _utils.isUndefined)(duration) ^ !(0, _utils.isUndefined)(nbFrames))) throw new Error('Exactly one option of [\'duration\', \'nbFrames\'] is required');
+  (0, _utils.assert)(!(0, _utils.isUndefined)(duration) ^ !(0, _utils.isUndefined)(nbFrames), 'Exactly one option of [\'duration\', \'nbFrames\'] is required');
 
   if (duration) (0, _utils.assert)((0, _utils.isInteger)(duration) && duration > 0, '\'duration\' must be an integer greater than 0');
 
@@ -1125,9 +1129,7 @@ exports.default = internal.Animation = function () {
   var _startedAt = void 0;
   var _pausedAt = void 0;
   var _pausedTime = void 0;
-  var _frameCounter = void 0;
-
-  console.log('frequency', _frequency);
+  var _frameCounter = 0;
 
   var animation = {
     isZwipAnimation: true,
@@ -1137,19 +1139,16 @@ exports.default = internal.Animation = function () {
 
       if (_startedAt) throw new Error('Animation is already started');
 
-      // console.log('Animation.start()', options)
-
       (0, _utils.isObject)(options, 'options');
 
-      // const reverse = 'reverse' in options ? !!options.reverse : _reverse;
       if ('reverse' in options) _reverse = !!options.reverse;
 
       _pausedAt = null;
       _startedAt = Date.now();
       _frameCounter = 0;
       _pausedTime = 0;
-
       _start(options);
+      _status = 'started';
 
       _loop2.default.register(animation);
 
@@ -1160,7 +1159,7 @@ exports.default = internal.Animation = function () {
       _pausedAt = null;
       _startedAt = null;
       _pausedTime = null;
-
+      _status = 'stopped';
       _stop();
 
       _loop2.default.deregister(animation);
@@ -1191,7 +1190,9 @@ exports.default = internal.Animation = function () {
 
         var playedTime = animation.played;
 
-        nbFrames = Math.floor(_frameCounter * duration / playedTime);
+        var recalculated = Math.floor(_frameCounter * duration / playedTime);
+
+        if (recalculated > _frameCounter) nbFrames = recalculated;
       }
 
       _update();
@@ -1226,7 +1227,17 @@ exports.default = internal.Animation = function () {
     },
     get value() {
 
-      var value = _frameCounter / nbFrames;
+      var value = _frameCounter / animation.nbFrames;
+
+      if (value < 0) {
+        console.error('value is < 0', value);
+        return 0;
+      }
+
+      if (value > 1) {
+        console.error('value is > 1', value);
+        return 1;
+      }
 
       return _easing(!_reverse ? value : 1 - value);
     },
@@ -1252,6 +1263,7 @@ exports.default = internal.Animation = function () {
     },
     get state() {
       return {
+        status: _status,
         value: animation.value,
         nbFrames: animation.nbFrames,
         duration: animation.duration,
@@ -1261,7 +1273,11 @@ exports.default = internal.Animation = function () {
     }
   };
 
-  return Object.assign(animation, (0, _klak2.default)(['start', 'stop', 'pause', 'unpause', 'tick']));
+  Object.assign(animation, (0, _klak2.default)(['start', 'stop', 'pause', 'unpause', 'tick']));
+
+  var _status = 'created';
+
+  return animation;
 };
 
 internal.Animation.isAnimation = function (input) {
@@ -1326,8 +1342,10 @@ var Chain = function Chain() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
 
-      if (_started) throw new Error('Chain is already started');
-
+      if (_started) {
+        console.error('Chain is already started');
+        return;
+      }
       _started = true;
 
       var _isObject = (0, _utils.isObject)(options, 'options'),
@@ -1375,8 +1393,8 @@ var Chain = function Chain() {
     },
     stop: function stop() {
 
-      _stop();
       _started = false;
+      _stop();
     }
   };
 
@@ -1466,7 +1484,7 @@ var internal = {
 
 internal.loop = function () {
 
-  if (internal.paused) return;
+  if (internal.state.status !== 'started') return;
 
   internal.requestId = requestAnimationFrame(internal.loop);
   internal.now = Date.now();
@@ -1591,13 +1609,9 @@ internal.AnimationLoop = {
     internal.state.animations = internal.animations.length;
     internal.state.frames = internal.counter;
 
-    var animations = internal.animations.filter(internal.isNotPaused);
-
-    animations.forEach(internal.emitTick);
-
-    animations.forEach(internal.callUpdate);
-
-    animations.forEach(internal.callRender);
+    internal.animations.filter(internal.isNotPaused).forEach(internal.emitTick);
+    internal.animations.filter(internal.isNotPaused).forEach(internal.callUpdate);
+    internal.animations.filter(internal.isNotPaused).forEach(internal.callRender);
   },
 
 
@@ -1716,6 +1730,10 @@ var isNumber = exports.isNumber = internals.Assertion(function (input) {
 var isInteger = exports.isInteger = internals.Assertion(function (input) {
   return Number.isInteger(input);
 }, 'must be an integer');
+
+var isAnimation = exports.isAnimation = function isAnimation(input) {
+  return isObject(input) && input.isZwipAnimation === true;
+};
 
 var isElement = exports.isElement = internals.Assertion(function (object) {
 
