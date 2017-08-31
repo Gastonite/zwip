@@ -1,4 +1,4 @@
-import Loop from './loop';
+import Zwip from './zwip';
 import Emitter from 'klak';
 import { isInteger, isString, isObject, isFunction, isUndefined, noop, assert } from './utils';
 import { easings } from './easings';
@@ -25,205 +25,247 @@ internal.parseEasing = (easing = easings.linear) => {
 
 export default internal.Animation = (options = {}) => {
 
-  isObject(options, 'options');
-  isUndefined(options.isZwipAnimation, 'isZwipAnimation');
+  try {
+    isObject(options, 'options');
+    isUndefined(options.isZwipAnimation, 'isZwipAnimation');
 
-  const {
-    start:_start = noop,
-    stop:_stop = noop,
-    update:_update = noop,
-    render:_render = noop,
-    duration,
-    frequency:_frequency = 1
-  } = options;
+    const {
+      start:_start = noop,
+      stop:_stop = noop,
+      update:_update = noop,
+      render:_render = noop,
+      duration:_duration,
+      frequency:_frequency = 1
+    } = options;
 
-  let {
-    reverse:_reverse,
-    easing:_easing,
-    nbFrames,
-  } = options;
+    let {
+      reverse:_reverse,
+      easing:_easing,
+      nbFrames:_nbFrames,
+    } = options;
 
-  assert(isFunction(_start), `'start' must be a function`);
-  assert(isFunction(_stop), `'stop' must be a function`);
-  assert(isFunction(_update), `'update' must be a function`);
-  assert(isFunction(_render), `'render' must be a function`);
+    assert(isFunction(_start), `'start' must be a function`);
+    assert(isFunction(_stop), `'stop' must be a function`);
+    assert(isFunction(_update), `'update' must be a function`);
+    assert(isFunction(_render), `'render' must be a function`);
 
-  assert(isInteger(_frequency) && _frequency > 0, `'frequency' must be an integer greater than 0`);
+    assert(isInteger(_frequency) && _frequency > 0, `'frequency' must be an integer greater than 0`);
 
-  assert(!isUndefined(duration) ^ !isUndefined(nbFrames), `Exactly one option of ['duration', 'nbFrames'] is required`);
+    assert(_duration ^ _nbFrames, `Exactly one option of ['duration', 'nbFrames'] is required`);
 
-  if (duration)
-    assert(isInteger(duration) && duration > 0, `'duration' must be an integer greater than 0`);
+    if (_duration)
+      assert(isInteger(_duration) && _duration > 0, `'duration' must be an integer greater than 0`);
 
-  if (nbFrames)
-    assert(isInteger(nbFrames) && nbFrames > 0, `'nbFrames' must be an integer greater than 0`);
+    if (_nbFrames)
+      assert(isInteger(_nbFrames) && _nbFrames > 0, `'nbFrames' must be an integer greater than 0`);
 
-  _easing = internal.parseEasing(_easing);
-  _reverse = !!_reverse;
+    _easing = internal.parseEasing(_easing);
+    _reverse = !!_reverse;
 
-  let _startedAt;
-  let _pausedAt;
-  let _pausedTime;
-  let _frameCounter = 0;
+    let _status = 'created';
+    let _state = {};
+    let _startedAt;
+    let _pausedAt;
+    let _pausedTime;
+    let _frameCounter = 0;
 
-  const animation = {
-    isZwipAnimation: true,
-    start(options = {}) {
+    const _setState = newState => _state = isObject(newState) ? newState : {};
 
-      if (_startedAt)
-        throw new Error(`Animation is already started`);
+    const animation = {
+      isZwipAnimation: true,
+      start(options = {}) {
 
-      isObject(options, 'options');
+        if (_startedAt)
+          throw new Error(`Animation is already started`);
 
-      if ('reverse' in options)
-        _reverse = !!options.reverse;
+        isObject(options, 'options');
 
-      _pausedAt = null;
-      _startedAt = Date.now();
-      _frameCounter = 0;
-      _pausedTime = 0;
-      _start(options);
-      _status = 'started';
+        if ('reverse' in options)
+          _reverse = !!options.reverse;
 
-      Loop.register(animation);
+        _pausedAt = null;
+        _startedAt = Date.now();
+        _frameCounter = 0;
+        _pausedTime = 0;
 
-      animation.emit('start');
-    },
-    stop() {
+        _setState(_start(options));
 
-      _pausedAt = null;
-      _startedAt = null;
-      _pausedTime = null;
-      _status = 'stopped';
-      _stop();
+        _status = 'started';
 
-      Loop.deregister(animation);
+        Zwip.register(animation);
 
-      animation.emit('stop');
+        animation.emit('start');
+      },
+      reset() {
 
-    },
-    pause() {
+        assert(_status === 'stopped', `Animation must be stopped`);
 
-      if (!_pausedAt) {
-        _pausedAt = Date.now();
-        animation.emit('unpause');
-        return;
+        _frameCounter = 0;
+        _setState(_update());
+        animation.render();
+      },
+      stop() {
+
+        _pausedAt = null;
+        _startedAt = null;
+        _pausedTime = null;
+        _status = 'stopping';
+
+        _frameCounter = _nbFrames;
+        _setState(_update());
+        animation.render();
+
+        Zwip.deregister(animation);
+
+        _status = 'stopped';
+
+        _stop();
+
+        // animation.deregister();
+        animation.emit('stop');
+      },
+      pause() {
+
+        if (!_pausedAt) {
+          _pausedAt = Date.now();
+          animation.emit('unpause');
+          return;
+        }
+
+        _pausedTime = _pausedTime + (Date.now() - _pausedAt);
+        _pausedAt = null;
+        animation.emit('pause');
+
+      },
+      update() {
+        console.log('_status=', _status);
+        console.log('_state=', _state);
+
+        const isStopping = _status === 'stopping';
+
+        if (!_startedAt/* && !isStopping*/)
+          return;
+
+ /*       if (isStopping) {
+
+        }
+          console.error('stopping');*/
+
+        if (_nbFrames && (_frameCounter >= _nbFrames))
+          return animation.stop();
+
+        _frameCounter++;
+
+        if (_duration) {
+
+          const playedTime = animation.played;
+
+          const recalculated = Math.floor((_frameCounter * _duration) / playedTime);
+
+          if (recalculated > _frameCounter)
+            _nbFrames = recalculated;
+        }
+
+        _setState(_update());
+
+      },
+      render() {
+        _render(_state);
+      },
+      deregister: Zwip.deregister.bind(null, animation),
+      get currentFrame() {
+        return _frameCounter;
+      },
+      get reverse() {
+        return _reverse;
+      },
+      get frequency() {
+        return _frequency;
+      },
+      get pausedAt() {
+        return _pausedAt;
+      },
+      get played() {
+
+        if (!_startedAt)
+          return 0;
+
+        const now = Date.now();
+
+        let totalTime = now - _startedAt;
+
+        if (_pausedAt)
+          totalTime = totalTime - (now - _pausedAt);
+
+        return totalTime - _pausedTime;
+      },
+      get value() {
+
+        const value = _frameCounter / animation.nbFrames;
+
+        if (value < 0) {
+          console.error('value is < 0', value);
+          return 0;
+        }
+
+        if (value > 1) {
+          console.error('value is > 1', value);
+          return 1;
+        }
+
+        return _easing(!_reverse ? value : (1 - value));
+      },
+      get nbFrames() {
+
+        if (_nbFrames)
+          return _nbFrames;
+
+        const duration = animation.duration;
+
+        if (!duration)
+          return;
+
+        return (duration / 1000) * (Zwip.fps)
+      },
+      get duration() {
+
+        if (_duration)
+          return _duration;
+
+        const nbFrames = animation.nbFrames;
+
+        if (!nbFrames)
+          return;
+
+        return nbFrames / (Zwip.fps)
+      },
+      set duration(newDuration) {
+        const isRegistered = Zwip.isRegistered(animation);
+        console.log('set duration', isRegistered, _duration);
+      },
+      get state() {
+        return {
+          status: _status,
+          value: animation.value,
+          nbFrames: animation.nbFrames,
+          duration: animation.duration,
+          played: animation.played,
+          currentFrame: animation.currentFrame
+        };
       }
+    };
 
-      _pausedTime = _pausedTime + (Date.now() - _pausedAt);
-      _pausedAt = null;
-      animation.emit('pause');
+    Object.assign(animation, Emitter(['start', 'stop', 'pause', 'unpause', 'tick']));
 
-    },
-    update() {
-
-      if (!_startedAt)
-        return;
+    return animation;
+  } catch (err) {
 
 
-      if (nbFrames && (_frameCounter >= nbFrames))
-        return animation.stop();
+    err.message = `Invalid animation: ${err.message}`;
+    throw err;
+  }
 
-      _frameCounter++;
 
-      if (duration) {
-
-        const playedTime = animation.played;
-
-        const recalculated = Math.floor((_frameCounter * duration) / playedTime);
-
-        if (recalculated > _frameCounter)
-          nbFrames = recalculated;
-      }
-
-      _update();
-    },
-    render() {
-      _render();
-    },
-    get currentFrame() {
-      return _frameCounter;
-    },
-    get reverse() {
-      return _reverse;
-    },
-    get frequency() {
-      return _frequency;
-    },
-    get pausedAt() {
-      return _pausedAt;
-    },
-    get played() {
-
-      if (!_startedAt)
-        return 0;
-
-      const now = Date.now();
-
-      let totalTime = now - _startedAt;
-
-      if (_pausedAt)
-        totalTime = totalTime - (now - _pausedAt);
-
-      return totalTime - _pausedTime;
-    },
-    get value() {
-
-      const value = _frameCounter / animation.nbFrames;
-
-      if (value < 0) {
-        console.error('value is < 0', value);
-        return 0;
-      }
-
-      if (value > 1) {
-        console.error('value is > 1', value);
-        return 1;
-      }
-
-      return _easing(!_reverse ? value : (1 - value));
-    },
-    get nbFrames() {
-
-      if (nbFrames)
-        return nbFrames;
-
-      const duration = animation.duration;
-
-      if (!duration)
-        return;
-
-      return (duration / 1000) * (Loop.fps)
-    },
-    get duration() {
-
-      if (duration)
-        return duration;
-
-      const nbFrames = animation.nbFrames;
-
-      if (!nbFrames)
-        return;
-
-      return nbFrames / (Loop.fps)
-    },
-    get state() {
-      return {
-        status: _status,
-        value: animation.value,
-        nbFrames: animation.nbFrames,
-        duration: animation.duration,
-        played: animation.played,
-        currentFrame: animation.currentFrame
-      };
-    }
-  };
-
-  Object.assign(animation, Emitter(['start', 'stop', 'pause', 'unpause', 'tick']));
-
-  let _status = 'created';
-
-  return animation;
 };
 
 internal.Animation.isAnimation = input => isObject(input) && input.isZwipAnimation === true;

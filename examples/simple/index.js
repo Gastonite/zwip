@@ -8,17 +8,25 @@ const MyAnimation = (element) => {
   const _parentWidth = element.parentNode.clientWidth;
   let _left;
 
-  const start = ({ reverse }) => _left = reverse ? _parentWidth : 0;
+  // const initialState = { left: 0 };
+
   const stop = () => console.error('STOOOOOPP!');
-  const update = () => _left = animation.value * (_parentWidth - _width);
-  const render = () => element.style.left = `${_left}px`;
+  const start = ({ reverse }) => ({ left: reverse ? _parentWidth : 0 });
+  const update = () => {
+    console.log('MyAnimation.update', animation.value);
+
+    return { left: animation.value * (_parentWidth - _width) };
+  };
+  const render = ({ left }) => {
+    element.style.left = `${left}px`;
+  };
 
   const animation = Animation({
     start,                  // Called just before the animation starts (optional)
     stop,                   // Called just after the animation stops (optional)
     update,                 // Called once per frame before render (optional)
     render,                 // Called once per frame to render whatever you like (required)
-    duration: 800,        // Duration of the animation in milliseconds (required except when 'nbFrames' is provided)
+    duration: 2000,        // Duration of the animation in milliseconds (required except when 'nbFrames' is provided)
     //nbFrames: 10,           // The total number of frames (required except when 'duration' is provided)
     easing: 'easeInCubic',  // Easing function (optional, default to linear)
     frequency: 1           // Controls the frequency at which the animation is updated by the loop (defaults to 1, which means every frames)
@@ -28,7 +36,48 @@ const MyAnimation = (element) => {
 };
 
 
+let _myAnimation;
+
+
+const _pauseAnimation = event => {
+
+  console.log('stop button was clicked', event);
+
+  if (!_myAnimation)
+    return;
+
+  _myAnimation.pause();
+};
+const _stopAnimation = event => {
+
+  console.log('stop button was clicked', event);
+
+  if (!_myAnimation)
+    return;
+
+  _myAnimation.stop();
+};
+const _resetAnimation = event => {
+
+  console.log('reset button was clicked', event);
+
+  if (!_myAnimation)
+    return;
+
+  _myAnimation.reset();
+};
+
+
 document.addEventListener('DOMContentLoaded', () => {
+
+  const pauseButton = document.getElementById('pause');
+  const stopButton = document.getElementById('stop');
+  const resetButton = document.getElementById('reset');
+
+  pauseButton.addEventListener('click', _pauseAnimation);
+  stopButton.addEventListener('click', _stopAnimation);
+  resetButton.addEventListener('click', _resetAnimation);
+
 
   const myElement = document.body.appendChild(document.createElement('div'));
   const loopState = document.body.appendChild(document.createElement('pre'));
@@ -40,10 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
   myElement.setAttribute('style', style);
   myElement.innerText = 'click me';
 
-  const myAnimation = MyAnimation(myElement);
+  _myAnimation = MyAnimation(myElement);
 
   const displayAnimationState = () => {
-    animationState.innerHTML = `Animation state: ${JSON.stringify(myAnimation.state, null, 2)}`;
+    animationState.innerHTML = `Animation state: ${JSON.stringify(_myAnimation.state, null, 2)}`;
   };
   const displayLoopState = () => {
     loopState.innerHTML = `Loop state: ${JSON.stringify(Loop.state, null, 2)}`;
@@ -51,13 +100,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let reverse = false;
 
-  myAnimation.on('start', () => console.error('It begins ...'));
-  myAnimation.on('stop', [() => reverse = !reverse, displayLoopState]);
-  myAnimation.on('tick', displayAnimationState);
+  _myAnimation.on('start', () => console.error('It begins ...'));
+  _myAnimation.on('stop', [() => reverse = !reverse, displayLoopState]);
+  _myAnimation.on('tick', displayAnimationState);
 
   Loop.on('tick', displayLoopState);
 
-  myElement.addEventListener('mouseup', () =>  myAnimation.start({ reverse }));
+  myElement.addEventListener('mouseup', () =>  _myAnimation.start({ reverse }));
 
   displayLoopState();
   displayAnimationState();

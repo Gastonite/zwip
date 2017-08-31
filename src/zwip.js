@@ -4,7 +4,6 @@ import { assert, isRequired, isFunction, isString, isObject, isInteger, noop } f
 
 const internal = {
   animations: [],
-  listeners: [],
   state: {
     status: 'initialized'
   },
@@ -27,23 +26,24 @@ internal.loop = () => {
 
   if (internal.delta > internal.interval) {
 
-    internal.AnimationLoop.frame();
+    internal.Zwip.frame();
   }
 };
 
-internal.MethodCaller = (key, ...args) => {
-
-  isRequired(key, 'key');
-  isString(key, 'key');
-
-  return animation => {
-
-    // console.log(internal.counter, animation, animation.frequency, internal.counter % animation.frequency)
-    if (animation[key] && (internal.counter % animation.frequency === 0))
-      animation[key](...args);
-
-  }
-};
+// internal.MethodCaller = (key, ...args) => {
+//
+//   isRequired(key, 'key');
+//   isString(key, 'key');
+//
+//   return animation => {
+//
+//     // console.log(internal.counter, animation, animation.frequency, internal.counter % animation.frequency)
+//     if (animation[key] && (internal.counter % animation.frequency === 0))
+//       animation[key](...args);
+//
+//   }
+// };
+internal.MethodCaller = (key, ...args) => object => object[key](...args);
 
 internal.emitTick = internal.MethodCaller('emit', 'tick');
 internal.callUpdate = internal.MethodCaller('update');
@@ -52,7 +52,9 @@ internal.callPause = internal.MethodCaller('pause');
 
 internal.isNotPaused = object => !object.pausedAt;
 
-internal.AnimationLoop = {
+internal.isAnimationStale = animation => internal.counter % animation.frequency === 0;
+
+internal.Zwip = {
   start() {
 
     if (internal.requestId)
@@ -65,7 +67,7 @@ internal.AnimationLoop = {
 
     internal.loop();
 
-    internal.AnimationLoop.emit('start');
+    internal.Zwip.emit('start');
   },
   stop() {
 
@@ -75,7 +77,7 @@ internal.AnimationLoop = {
     internal.requestId = null;
     internal.state.status = 'stopped';
 
-    internal.AnimationLoop.emit('stop');
+    internal.Zwip.emit('stop');
   },
   pause() {
 
@@ -86,7 +88,7 @@ internal.AnimationLoop = {
 
       internal.animations.forEach(internal.callPause);
 
-      internal.AnimationLoop.emit('unpause');
+      internal.Zwip.emit('unpause');
 
       internal.loop();
       return;
@@ -97,8 +99,9 @@ internal.AnimationLoop = {
     internal.paused = Date.now();
     internal.state.status = 'paused';
 
-    internal.AnimationLoop.emit('pause');
+    internal.Zwip.emit('pause');
   },
+  isRegistered: animation => internal.animations.includes(animation),
   register(animation, auto = true) {
 
     isObject(animation, 'animation');
@@ -111,13 +114,12 @@ internal.AnimationLoop = {
     animation.update = animation.update || noop;
 
     if (auto && !internal.requestId)
-      internal.AnimationLoop.start();
+      internal.Zwip.start();
 
-    if (internal.animations.includes(animation))
+    if (internal.Zwip.isRegistered(animation))
       return;
 
     internal.animations.push(animation);
-
   },
   deregister(animation, auto = true) {
 
@@ -126,14 +128,14 @@ internal.AnimationLoop = {
     if (~index)
       internal.animations.splice(index, 1);
 
-    if (auto && internal.requestId && !internal.animations.length)
-      internal.AnimationLoop.stop();
+    if (auto && internal.requestId && internal.animations.length < 1)
+      internal.Zwip.stop();
 
   },
 
   frame() {
 
-    internal.AnimationLoop.emit('tick');
+    internal.Zwip.emit('tick');
 
     internal.counter++;
 
@@ -144,10 +146,24 @@ internal.AnimationLoop = {
     internal.state.animations = internal.animations.length;
     internal.state.frames = internal.counter;
 
+    const startedAnimations = internal.animations.filter(internal.isNotPaused);
 
-    internal.animations.filter(internal.isNotPaused).forEach(internal.emitTick);
-    internal.animations.filter(internal.isNotPaused).forEach(internal.callUpdate);
-    internal.animations.filter(internal.isNotPaused).forEach(internal.callRender);
+    const staleAnimations = startedAnimations.filter(internal.isAnimationStale);
+
+    staleAnimations.forEach(internal.emitTick);
+    staleAnimations.forEach(internal.callUpdate);
+    staleAnimations.forEach(internal.callRender);
+
+    // const states = staleAnimations.map(internal.callUpdate);
+    //
+    // console.log('states:', states)
+    // states.forEach((state, i) => {
+    //   const animation = staleAnimations[i];
+    //
+    //   animation.render(state || {});
+    // });
+
+    // startedAnimations.forEach(internal.callRender);
   },
 
   get state() {
@@ -165,6 +181,6 @@ internal.AnimationLoop = {
 };
 
 export default Object.assign(
-  internal.AnimationLoop,
+  internal.Zwip,
   Emitter(['start', 'stop', 'pause', 'unpause', 'tick'])
 );
