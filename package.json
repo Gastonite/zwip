@@ -1,6 +1,6 @@
 {
   "name": "zwip",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "main": "src/index.js",
   "repository": "https://github.com/Gastonite/zwip",
   "author": "Clément Pasquier <clement@n00sphere.net>",
