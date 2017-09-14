@@ -1,4 +1,4 @@
-import Loop from '../../src/loop';
+import Zwip from '../../src/zwip';
 import Animation from '../../src/animation';
 import { isObject, isElement, isArray, isInteger, noop } from '../../src/utils';
 import Chain from '../../src/chain';

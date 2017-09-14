@@ -106,6 +106,11 @@ export default internal.Animation = (options = {}) => {
       },
       stop() {
 
+        if (_status !== 'started')
+          return;
+
+        // assert(_status === 'started', `Animation must be started`);
+
         _pausedAt = null;
         _startedAt = null;
         _pausedTime = null;
@@ -138,8 +143,8 @@ export default internal.Animation = (options = {}) => {
 
       },
       update() {
-        console.log('_status=', _status);
-        console.log('_state=', _state);
+        // console.log('_status=', _status);
+        // console.log('_state=', _state);
 
         const isStopping = _status === 'stopping';
 
@@ -178,6 +183,9 @@ export default internal.Animation = (options = {}) => {
       },
       get reverse() {
         return _reverse;
+      },
+      get status() {
+        return _status;
       },
       get frequency() {
         return _frequency;
@@ -245,7 +253,7 @@ export default internal.Animation = (options = {}) => {
       },
       get state() {
         return {
-          status: _status,
+          status: animation.status,
           value: animation.value,
           nbFrames: animation.nbFrames,
           duration: animation.duration,
@@ -258,6 +266,7 @@ export default internal.Animation = (options = {}) => {
     Object.assign(animation, Emitter(['start', 'stop', 'pause', 'unpause', 'tick']));
 
     return animation;
+
   } catch (err) {
 
 

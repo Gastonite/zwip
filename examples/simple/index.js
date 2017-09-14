@@ -1,4 +1,4 @@
-import { Loop, Animation } from '../../src';
+import { Zwip, Animation } from '../../src';
 
 const style = 'position:absolute;left:0;background-color:#6495ed;width:30px;height:30px;text-align:center';
 
@@ -94,20 +94,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const displayAnimationState = () => {
     animationState.innerHTML = `Animation state: ${JSON.stringify(_myAnimation.state, null, 2)}`;
   };
-  const displayLoopState = () => {
-    loopState.innerHTML = `Loop state: ${JSON.stringify(Loop.state, null, 2)}`;
+
+  const displayZwipState = () => {
+    loopState.innerHTML = `Zwip state: ${JSON.stringify(Zwip.state, null, 2)}`;
   };
 
   let reverse = false;
 
   _myAnimation.on('start', () => console.error('It begins ...'));
-  _myAnimation.on('stop', [() => reverse = !reverse, displayLoopState]);
+  _myAnimation.on('stop', [() => reverse = !reverse, displayZwipState]);
   _myAnimation.on('tick', displayAnimationState);
 
-  Loop.on('tick', displayLoopState);
+  Zwip.on('tick', displayZwipState);
 
   myElement.addEventListener('mouseup', () =>  _myAnimation.start({ reverse }));
 
-  displayLoopState();
+  displayZwipState();
   displayAnimationState();
 });

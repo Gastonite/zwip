@@ -1,3 +1,3 @@
 export Animation from './animation';
-export Loop from './zwip';
+export Zwip from './zwip';
 export Chain from './chain';

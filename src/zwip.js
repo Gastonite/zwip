@@ -52,6 +52,7 @@ internal.callPause = internal.MethodCaller('pause');
 
 internal.isNotPaused = object => !object.pausedAt;
 
+internal.isAnimationStarted = animation => animation.status === 'started';
 internal.isAnimationStale = animation => internal.counter % animation.frequency === 0;
 
 internal.Zwip = {
@@ -152,7 +153,7 @@ internal.Zwip = {
 
     staleAnimations.forEach(internal.emitTick);
     staleAnimations.forEach(internal.callUpdate);
-    staleAnimations.forEach(internal.callRender);
+    staleAnimations.filter(internal.isAnimationStarted).forEach(internal.callRender);
 
     // const states = staleAnimations.map(internal.callUpdate);
     //
